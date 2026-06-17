@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kas Family Pejuang Perintis</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --emerald: #059669;
+    --emerald-light: #10b981;
+    --emerald-pale: #d1fae5;
+    --emerald-dark: #047857;
+    --gold: #f59e0b;
+    --gold-light: #fde68a;
+    --navy: #0f172a;
+    --navy-mid: #1e293b;
+    --navy-soft: #334155;
+    --slate: #64748b;
+    --slate-light: #94a3b8;
+    --mist: #f1f5f9;
+    --white: #ffffff;
+    --danger: #ef4444;
+    --danger-pale: #fee2e2;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--mist); color: var(--navy); min-height: 100vh; }
+
+  /* LOGIN */
+  #loginScreen { min-height: 100vh; background: linear-gradient(135deg, var(--navy) 0%, #1a3a2a 50%, var(--emerald-dark) 100%); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-card { background: var(--white); border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); text-align: center; }
+  .login-badge { width: 72px; height: 72px; background: linear-gradient(135deg, var(--emerald), var(--emerald-dark)); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px; }
+  .login-card h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .login-card p { color: var(--slate); font-size: 13px; margin-bottom: 32px; }
+  .login-card input { width: 100%; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: var(--radius-sm); font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; margin-bottom: 16px; }
+  .login-card input:focus { border-color: var(--emerald); }
+  .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--emerald), var(--emerald-dark)); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+  .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+  .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+
+  /* APP */
+  #appShell { display: none; }
+  .top-bar { background: var(--white); border-bottom: 1px solid #e2e8f0; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.06); flex-wrap: wrap; gap: 8px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--emerald), var(--emerald-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .brand-text { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--navy); line-height: 1.2; }
+  .brand-text span { display: block; font-size: 11px; font-weight: 400; color: var(--slate); }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-btn { padding: 8px 14px; border: none; background: transparent; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; font-family: inherit; color: var(--slate); cursor: pointer; transition: all 0.2s; }
+  .nav-btn:hover { background: var(--mist); color: var(--navy); }
+  .nav-btn.active { background: var(--emerald-pale); color: var(--emerald-dark); }
+  .logout-btn { padding: 8px 14px; border: 1.5px solid #e2e8f0; background: white; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; font-family: inherit; color: var(--slate); cursor: pointer; transition: all 0.2s; }
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .page { display: none; padding: 28px 24px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--white); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .card-title .dot { width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; }
+
+  /* SUMMARY */
+  .summary-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .summary-box { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
+  .summary-box.income { border-left-color: var(--emerald); }
+  .summary-box.expense { border-left-color: var(--danger); }
+  .summary-box.balance { border-left-color: var(--gold); }
+  .summary-label { font-size: 11px; font-weight: 600; color: var(--slate-light); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .summary-value { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--navy); }
+  .summary-value.income { color: var(--emerald); }
+  .summary-value.expense { color: var(--danger); }
+  .summary-value.balance { color: var(--gold); }
+
+  /* MEMBER */
+  .member-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+  .member-card { border: 1.5px solid #e2e8f0; border-radius: var(--radius-sm); padding: 18px; transition: border-color 0.2s; background: var(--mist); }
+  .member-card:focus-within { border-color: var(--emerald); background: white; }
+  .member-name { font-size: 13px; font-weight: 700; color: var(--navy-soft); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .member-avatar { width: 28px; height: 28px; background: linear-gradient(135deg, var(--emerald-pale), var(--emerald)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .member-inputs { display: flex; gap: 8px; }
+  .member-inputs input { flex: 1; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: white; transition: border-color 0.2s; }
+  .member-inputs input:focus { border-color: var(--emerald); }
+
+  /* FORM */
+  .field-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  input[type="text"], input[type="number"], input[type="date"], input[type="password"], textarea, select { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; outline: none; background: white; transition: border-color 0.2s; color: var(--navy); }
+  input:focus, textarea:focus, select:focus { border-color: var(--emerald); }
+  textarea { resize: vertical; min-height: 80px; }
+  .note-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--gold-light); color: #92400e; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; margin-bottom: 20px; }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+  .btn { padding: 12px 24px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-green { background: linear-gradient(135deg, var(--emerald-light), var(--emerald)); color: white; flex: 1; }
+  .btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-outline { background: white; color: var(--slate); border: 1.5px solid #e2e8f0; }
+  .btn-outline:hover { border-color: var(--emerald); color: var(--emerald); }
+  .btn-danger { background: var(--danger-pale); color: var(--danger); border: 1.5px solid #fca5a5; }
+
+  /* SYNC STATUS */
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .status-dot.syncing { background: var(--gold); animation: pulse 1.2s infinite; }
+  .status-dot.synced { background: var(--emerald); }
+  .status-dot.error { background: var(--danger); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .sync-status { font-size: 11px; color: var(--slate); display: flex; align-items: center; margin-top: 10px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--navy); color: white; }
+  thead th { padding: 14px 16px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+  tbody tr:hover { background: #f8fafc; }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 13px 16px; color: var(--navy-soft); }
+  td.debit { color: var(--emerald); font-weight: 600; }
+  td.kredit { color: var(--danger); font-weight: 600; }
+  td.saldo { color: var(--navy); font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: var(--emerald-pale); color: var(--emerald-dark); }
+  .badge-red { background: var(--danger-pale); color: var(--danger); }
+
+  /* EXPORT */
+  .export-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .export-opt { border: 2px solid #e2e8f0; border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; background: white; }
+  .export-opt.selected { border-color: var(--emerald); background: var(--emerald-pale); }
+  .export-opt-icon { font-size: 24px; }
+  .export-opt-label { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .export-opt-sub { font-size: 11px; color: var(--slate); }
+
+  /* SETTINGS */
+  .settings-section { margin-bottom: 28px; }
+  .settings-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--slate-light); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: white; padding: 14px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 999; max-width: 300px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 4px solid var(--emerald); }
+  .toast.error { border-left: 4px solid var(--danger); }
+
+  /* LOADING OVERLAY */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 998; display: none; }
+  .loading-box { background: white; border-radius: 16px; padding: 32px 40px; text-align: center; }
+  .spinner { width: 40px; height: 40px; border: 4px solid var(--emerald-pale); border-top-color: var(--emerald); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .top-bar { height: auto; padding: 12px 16px; }
+    .nav-btn { padding: 6px 10px; font-size: 11px; }
+    .page { padding: 16px 12px; }
+    .summary-strip { grid-template-columns: 1fr; }
+    .member-grid { grid-template-columns: 1fr; }
+    .export-options { grid-template-columns: 1fr; }
+    .login-card { padding: 36px 24px; }
+  }
+  .divider { height: 1px; background: #e2e8f0; margin: 20px 0; }
+  .text-sm { font-size: 13px; color: var(--slate); }
+  .mt-8 { margin-top: 8px; }
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--slate-light); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .cloud-badge { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; margin-left: 8px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-badge">💰</div>
+    <h1>Pejuang Perintis</h1>
+    <p>Kas Family — Masukkan password untuk melanjutkan</p>
+    <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">Masuk →</button>
+    <div class="error-msg" id="loginError">❌ Password salah, coba lagi.</div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div style="font-size:14px;font-weight:600;color:#334155;" id="loadingMsg">Memuat data...</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appShell">
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">💰</div>
+      <div class="brand-text">Pejuang Perintis<span>Kas Family</span></div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="showPage('home',this)">🏠 Home</button>
+      <button class="nav-btn" onclick="showPage('jurnal',this)">📒 Jurnal</button>
+      <button class="nav-btn" onclick="showPage('export',this)">📄 Export PDF</button>
+      <button class="nav-btn" onclick="showPage('settings',this)">⚙️ Settings</button>
+    </nav>
+    <button class="logout-btn" onclick="doLogout()">Keluar</button>
+  </div>
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="summary-strip">
+      <div class="summary-box income">
+        <div class="summary-label">Total Pemasukan</div>
+        <div class="summary-value income" id="totalIncome">Rp 0</div>
+      </div>
+      <div class="summary-box expense">
+        <div class="summary-label">Total Pengeluaran</div>
+        <div class="summary-value expense" id="totalExpense">Rp 0</div>
+      </div>
+      <div class="summary-box balance">
+        <div class="summary-label">Saldo Kas</div>
+        <div class="summary-value balance" id="totalBalance">Rp 0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <div class="dot"></div>Input Iuran Anggota
+        <span class="cloud-badge">☁️ Auto-sync Cloud</span>
+      </div>
+      <div class="note-badge">📌 Iuran normal: Rp 100.000 / anggota / bulan</div>
+      <div class="member-grid">
+        <div class="member-card">
+          <div class="member-name"><div class="member-avatar">👩</div>Te Elah</div>
+          <div class="member-inputs">
+            <input type="number" id="elah_nominal" placeholder="Nominal (Rp)" min="0">
+            <input type="date" id="elah_tgl">
+          </div>
+        </div>
+        <div class="member-card">
+          <div class="member-name"><div class="member-avatar">👩</div>Te Nty</div>
+          <div class="member-inputs">
+            <input type="number" id="nty_nominal" placeholder="Nominal (Rp)" min="0">
+            <input type="date" id="nty_tgl">
+          </div>
+        </div>
+        <div class="member-card">
+          <div class="member-name"><div class="member-avatar">👩</div>Te Iyang</div>
+          <div class="member-inputs">
+            <input type="number" id="iyang_nominal" placeholder="Nominal (Rp)" min="0">
+            <input type="date" id="iyang_tgl">
+          </div>
+        </div>
+        <div class="member-card">
+          <div class="member-name"><div class="member-avatar">👨</div>Om Iki</div>
+          <div class="member-inputs">
+            <input type="number" id="iki_nominal" placeholder="Nominal (Rp)" min="0">
+            <input type="date" id="iki_tgl">
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="simpanIuran()">💾 Simpan Iuran</button>
+        <button class="btn btn-outline" onclick="resetIuran()">Reset</button>
+      </div>
+      <div class="sync-status" id="syncIuran"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Input Pengeluaran</div>
+      <div class="field-group">
+        <label>Nominal Pengeluaran (Rp)</label>
+        <input type="number" id="exp_nominal" placeholder="Contoh: 50000" min="0">
+      </div>
+      <div class="field-group">
+        <label>Keterangan</label>
+        <textarea id="exp_ket" placeholder="Contoh: Beli snack rapat bulanan..."></textarea>
+      </div>
+      <div class="field-group">
+        <label>Tanggal Pengeluaran</label>
+        <input type="date" id="exp_tgl">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="simpanPengeluaran()">💾 Simpan Pengeluaran</button>
+        <button class="btn btn-outline" onclick="resetPengeluaran()">Reset</button>
+      </div>
+      <div class="sync-status" id="syncExp"></div>
+    </div>
+  </div>
+
+  <!-- JURNAL -->
+  <div class="page" id="page-jurnal">
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Jurnal Kas — Semua Transaksi</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <input type="month" id="filterBulan" style="width:auto;" onchange="renderJurnal()">
+        <button class="btn btn-outline" style="padding:10px 16px;font-size:13px;" onclick="document.getElementById('filterBulan').value='';renderJurnal()">Semua</button>
+        <button class="btn btn-outline" style="padding:10px 16px;font-size:13px;" onclick="loadFromCloud()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tgl</th>
+              <th>Keterangan</th>
+              <th>Debit (+)</th>
+              <th>Kredit (−)</th>
+              <th>Saldo</th>
+              <th>Tipe</th>
+            </tr>
+          </thead>
+          <tbody id="jurnalBody">
+            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><p>Belum ada transaksi</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT PDF -->
+  <div class="page" id="page-export">
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Export Laporan PDF</div>
+      <div class="export-options">
+        <div class="export-opt selected" id="opt-semua" onclick="selectExport('semua')">
+          <div class="export-opt-icon">📋</div>
+          <div><div class="export-opt-label">Semua Data</div><div class="export-opt-sub">Seluruh riwayat transaksi</div></div>
+        </div>
+        <div class="export-opt" id="opt-range" onclick="selectExport('range')">
+          <div class="export-opt-icon">📅</div>
+          <div><div class="export-opt-label">Pilih Tanggal</div><div class="export-opt-sub">Dari tgl sekian ke sekian</div></div>
+        </div>
+        <div class="export-opt" id="opt-bulan" onclick="selectExport('bulan')">
+          <div class="export-opt-icon">🗓️</div>
+          <div><div class="export-opt-label">Per Bulan</div><div class="export-opt-sub">Pilih bulan & tahun</div></div>
+        </div>
+        <div class="export-opt" id="opt-tahun" onclick="selectExport('tahun')">
+          <div class="export-opt-icon">📆</div>
+          <div><div class="export-opt-label">Per Tahun</div><div class="export-opt-sub">Laporan tahunan</div></div>
+        </div>
+      </div>
+      <div id="rangeFields" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="field-group"><label>Dari Tanggal</label><input type="date" id="exp_dari"></div>
+          <div class="field-group"><label>Sampai Tanggal</label><input type="date" id="exp_sampai"></div>
+        </div>
+      </div>
+      <div id="bulanFields" style="display:none;">
+        <div class="field-group"><label>Pilih Bulan</label><input type="month" id="exp_bulan"></div>
+      </div>
+      <div id="tahunFields" style="display:none;">
+        <div class="field-group"><label>Pilih Tahun</label><select id="exp_tahun"></select></div>
+      </div>
+      <div class="divider"></div>
+      <button class="btn btn-green" style="width:100%;" onclick="exportPDF()">🖨️ Export ke PDF</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="card">
+      <div class="card-title"><div class="dot"></div>Settings</div>
+
+      <div class="settings-section">
+        <div class="settings-title">☁️ Status Cloud Storage</div>
+        <div style="background:var(--emerald-pale);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:28px;">✅</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--emerald-dark);">JSONBin Cloud Aktif</div>
+            <div style="font-size:12px;color:var(--slate);margin-top:2px;">Data otomatis tersimpan ke cloud. Bisa diakses dari HP manapun.</div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-outline" onclick="loadFromCloud()" style="flex:1;">🔄 Sync Ulang dari Cloud</button>
+        </div>
+        <div class="sync-status" id="syncCloud"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="settings-section">
+        <div class="settings-title">🔒 Ganti Password</div>
+        <div class="field-group"><label>Password Lama</label><input type="password" id="pwLama" placeholder="Masukkan password saat ini"></div>
+        <div class="field-group"><label>Password Baru</label><input type="password" id="pwBaru" placeholder="Password baru"></div>
+        <div class="field-group"><label>Konfirmasi Password Baru</label><input type="password" id="pwKonfirm" placeholder="Ulangi password baru"></div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="gantiPassword()">🔒 Ganti Password</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="settings-section">
+        <div class="settings-title">⚠️ Danger Zone</div>
+        <div class="text-sm" style="margin-bottom:14px;">Hapus semua data transaksi dari cloud. Tindakan ini tidak bisa dibatalkan!</div>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Hapus Semua Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONFIG =====
+const MASTER_KEY = '$2a$10$F1geYFRiHKyaRtb9VSUlQ.sx/qqZS3dzyf.pxS8KZRQRINSe2SlxK';
+const BIN_NAME = 'KasPejuangPerintis';
+const DEFAULT_PW = 'pejuang2024';
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+
+let DB = [];
+let BIN_ID = null;
+
+// ===== INIT =====
+async function init() {
+  setTodayDates();
+  populateTahunSelect();
+  BIN_ID = localStorage.getItem('kas_bin_id') || null;
+  await loadFromCloud();
+}
+
+function setTodayDates() {
+  const today = new Date().toISOString().split('T')[0];
+  ['elah_tgl','nty_tgl','iyang_tgl','iki_tgl','exp_tgl'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+}
+
+// ===== AUTH =====
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  const savedPw = localStorage.getItem('kas_pw') || DEFAULT_PW;
+  if (pw === savedPw) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+    init();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ===== NAV =====
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'jurnal') renderJurnal();
+}
+
+// ===== LOADING =====
+function showLoading(msg='Memuat data...') {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// ===== JSONBIN API =====
+async function findOrCreateBin() {
+  // Try to find existing bin
+  if (BIN_ID) return BIN_ID;
+
+  // Create new bin
+  try {
+    const res = await fetch(`${JSONBIN_BASE}/b`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY,
+        'X-Bin-Name': BIN_NAME,
+        'X-Bin-Private': 'true'
+      },
+      body: JSON.stringify({ transactions: [] })
+    });
+    const json = await res.json();
+    BIN_ID = json.metadata.id;
+    localStorage.setItem('kas_bin_id', BIN_ID);
+    return BIN_ID;
+  } catch(e) {
+    console.error('Create bin error:', e);
+    return null;
+  }
+}
+
+async function loadFromCloud() {
+  showLoading('Memuat data dari cloud...');
+  setSyncStatus('syncCloud', 'syncing', 'Menghubungi cloud...');
+  try {
+    // List bins to find existing one
+    if (!BIN_ID) {
+      const listRes = await fetch(`${JSONBIN_BASE}/b`, {
+        headers: { 'X-Master-Key': MASTER_KEY }
+      });
+      // If list not supported, try create
+      const id = await findOrCreateBin();
+      if (!id) throw new Error('Cannot create bin');
+    }
+
+    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
+    const json = await res.json();
+    DB = json.record?.transactions || [];
+    localStorage.setItem('kas_db', JSON.stringify(DB));
+    updateSummary();
+    renderJurnal();
+    setSyncStatus('syncCloud', 'synced', `✅ ${DB.length} transaksi dimuat dari cloud`);
+    hideLoading();
+  } catch(e) {
+    // Fallback to local
+    const raw = localStorage.getItem('kas_db');
+    DB = raw ? JSON.parse(raw) : [];
+    updateSummary();
+    renderJurnal();
+    setSyncStatus('syncCloud', 'error', '⚠️ Gagal ke cloud, pakai data lokal');
+    hideLoading();
+  }
+}
+
+async function saveToCloud() {
+  if (!BIN_ID) {
+    const id = await findOrCreateBin();
+    if (!id) return false;
+  }
+  try {
+    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': MASTER_KEY
+      },
+      body: JSON.stringify({ transactions: DB })
+    });
+    const json = await res.json();
+    localStorage.setItem('kas_db', JSON.stringify(DB));
+    return true;
+  } catch(e) {
+    localStorage.setItem('kas_db', JSON.stringify(DB));
+    return false;
+  }
+}
+
+// ===== HELPERS =====
+function rupiah(n) {
+  return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+function setSyncStatus(elId, state, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = `<span class="status-dot ${state}"></span>${msg}`;
+}
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ===== IURAN =====
+async function simpanIuran() {
+  const members = [
+    { key: 'elah', name: 'Te Elah' },
+    { key: 'nty',  name: 'Te Nty' },
+    { key: 'iyang',name: 'Te Iyang' },
+    { key: 'iki',  name: 'Om Iki' }
+  ];
+  let added = 0;
+  setSyncStatus('syncIuran', 'syncing', 'Menyimpan...');
+  for (const m of members) {
+    const nom = Number(document.getElementById(m.key + '_nominal').value);
+    const tgl = document.getElementById(m.key + '_tgl').value;
+    if (nom > 0 && tgl) {
+      DB.push({ id: genId(), tgl, ket: 'Iuran ' + m.name, debit: nom, kredit: 0, tipe: 'iuran' });
+      added++;
+    }
+  }
+  if (added === 0) { showToast('Isi minimal 1 anggota', 'error'); setSyncStatus('syncIuran','error','Tidak ada data'); return; }
+  showLoading('Menyimpan ke cloud...');
+  const ok = await saveToCloud();
+  hideLoading();
+  updateSummary();
+  resetIuran();
+  if (ok) {
+    setSyncStatus('syncIuran', 'synced', `✅ ${added} iuran tersimpan ke cloud`);
+    showToast(`${added} iuran berhasil disimpan`, 'success');
+  } else {
+    setSyncStatus('syncIuran', 'error', '⚠️ Tersimpan lokal, cloud gagal');
+    showToast('Tersimpan lokal (cloud error)', 'error');
+  }
+}
+
+function resetIuran() {
+  ['elah','nty','iyang','iki'].forEach(k => { document.getElementById(k + '_nominal').value = ''; });
+  setTodayDates();
+}
+
+// ===== PENGELUARAN =====
+async function simpanPengeluaran() {
+  const nom = Number(document.getElementById('exp_nominal').value);
+  const ket = document.getElementById('exp_ket').value.trim();
+  const tgl = document.getElementById('exp_tgl').value;
+  if (!nom || !ket || !tgl) { showToast('Lengkapi semua field', 'error'); return; }
+  setSyncStatus('syncExp', 'syncing', 'Menyimpan...');
+  DB.push({ id: genId(), tgl, ket, debit: 0, kredit: nom, tipe: 'pengeluaran' });
+  showLoading('Menyimpan ke cloud...');
+  const ok = await saveToCloud();
+  hideLoading();
+  updateSummary();
+  resetPengeluaran();
+  if (ok) {
+    setSyncStatus('syncExp', 'synced', '✅ Pengeluaran tersimpan ke cloud');
+    showToast('Pengeluaran berhasil disimpan', 'success');
+  } else {
+    setSyncStatus('syncExp', 'error', '⚠️ Tersimpan lokal, cloud gagal');
+    showToast('Tersimpan lokal (cloud error)', 'error');
+  }
+}
+
+function resetPengeluaran() {
+  document.getElementById('exp_nominal').value = '';
+  document.getElementById('exp_ket').value = '';
+  document.getElementById('exp_tgl').value = new Date().toISOString().split('T')[0];
+}
+
+// ===== SUMMARY =====
+function updateSummary() {
+  const totalIn = DB.reduce((s,r) => s + (r.debit||0), 0);
+  const totalOut = DB.reduce((s,r) => s + (r.kredit||0), 0);
+  document.getElementById('totalIncome').textContent = rupiah(totalIn);
+  document.getElementById('totalExpense').textContent = rupiah(totalOut);
+  document.getElementById('totalBalance').textContent = rupiah(totalIn - totalOut);
+}
+
+// ===== JURNAL =====
+function renderJurnal() {
+  const filter = document.getElementById('filterBulan').value;
+  let rows = filter ? DB.filter(r => r.tgl && r.tgl.startsWith(filter)) : [...DB];
+  rows.sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+  let saldo = 0;
+  const body = document.getElementById('jurnalBody');
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><p>Belum ada transaksi</p></div></td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(r => {
+    saldo += (r.debit||0) - (r.kredit||0);
+    return `<tr>
+      <td>${formatTgl(r.tgl)}</td>
+      <td>${r.ket}</td>
+      <td class="debit">${r.debit ? rupiah(r.debit) : '-'}</td>
+      <td class="kredit">${r.kredit ? rupiah(r.kredit) : '-'}</td>
+      <td class="saldo">${rupiah(saldo)}</td>
+      <td><span class="badge ${r.tipe==='iuran'?'badge-green':'badge-red'}">${r.tipe}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function formatTgl(tgl) {
+  if (!tgl) return '-';
+  return new Date(tgl).toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'});
+}
+
+// ===== EXPORT PDF =====
+let currentExportMode = 'semua';
+function selectExport(mode) {
+  currentExportMode = mode;
+  ['semua','range','bulan','tahun'].forEach(m => {
+    document.getElementById('opt-'+m).classList.toggle('selected', m===mode);
+  });
+  document.getElementById('rangeFields').style.display = mode==='range' ? 'block' : 'none';
+  document.getElementById('bulanFields').style.display = mode==='bulan' ? 'block' : 'none';
+  document.getElementById('tahunFields').style.display = mode==='tahun' ? 'block' : 'none';
+}
+
+function populateTahunSelect() {
+  const sel = document.getElementById('exp_tahun');
+  if (!sel) return;
+  const now = new Date().getFullYear();
+  for (let y = now; y >= now-5; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    sel.appendChild(opt);
+  }
+}
+
+function exportPDF() {
+  let rows = [...DB];
+  if (currentExportMode === 'range') {
+    const dari = document.getElementById('exp_dari').value;
+    const sampai = document.getElementById('exp_sampai').value;
+    if (!dari || !sampai) { showToast('Pilih tanggal dari & sampai', 'error'); return; }
+    rows = rows.filter(r => r.tgl >= dari && r.tgl <= sampai);
+  } else if (currentExportMode === 'bulan') {
+    const bln = document.getElementById('exp_bulan').value;
+    if (!bln) { showToast('Pilih bulan', 'error'); return; }
+    rows = rows.filter(r => r.tgl && r.tgl.startsWith(bln));
+  } else if (currentExportMode === 'tahun') {
+    const thn = document.getElementById('exp_tahun').value;
+    rows = rows.filter(r => r.tgl && r.tgl.startsWith(thn));
+  }
+  if (!rows.length) { showToast('Tidak ada data untuk diekspor', 'error'); return; }
+  rows.sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+  let saldo = 0;
+  const totalIn = rows.reduce((s,r) => s+(r.debit||0), 0);
+  const totalOut = rows.reduce((s,r) => s+(r.kredit||0), 0);
+  const rowsHtml = rows.map(r => {
+    saldo += (r.debit||0) - (r.kredit||0);
+    return `<tr>
+      <td>${formatTgl(r.tgl)}</td><td>${r.ket}</td>
+      <td style="color:#059669;font-weight:600;">${r.debit?rupiah(r.debit):'-'}</td>
+      <td style="color:#ef4444;font-weight:600;">${r.kredit?rupiah(r.kredit):'-'}</td>
+      <td style="font-weight:700;">${rupiah(saldo)}</td>
+      <td>${r.tipe}</td>
+    </tr>`;
+  }).join('');
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Laporan Kas Pejuang Perintis</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:40px;color:#0f172a;}
+    .header{text-align:center;margin-bottom:32px;border-bottom:3px solid #059669;padding-bottom:20px;}
+    .header h1{font-size:22px;color:#059669;margin-bottom:4px;}
+    .header p{color:#64748b;font-size:13px;}
+    .summary{display:flex;gap:20px;margin-bottom:24px;}
+    .sum-box{flex:1;padding:14px;border:1px solid #e2e8f0;border-radius:8px;text-align:center;}
+    .sum-box .label{font-size:11px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;}
+    .sum-box .val{font-size:18px;font-weight:700;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th{background:#0f172a;color:white;padding:10px 12px;text-align:left;}
+    td{padding:10px 12px;border-bottom:1px solid #f1f5f9;}
+    .footer{margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;}
+    @media print{body{padding:20px;}}
+  </style></head><body>
+  <div class="header">
+    <h1>💰 Kas Family Pejuang Perintis</h1>
+    <p>Dicetak: ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  </div>
+  <div class="summary">
+    <div class="sum-box"><div class="label">Total Pemasukan</div><div class="val" style="color:#059669">${rupiah(totalIn)}</div></div>
+    <div class="sum-box"><div class="label">Total Pengeluaran</div><div class="val" style="color:#ef4444">${rupiah(totalOut)}</div></div>
+    <div class="sum-box"><div class="label">Saldo Akhir</div><div class="val" style="color:#f59e0b">${rupiah(totalIn-totalOut)}</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Debit (+)</th><th>Kredit (−)</th><th>Saldo</th><th>Tipe</th></tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  <div class="footer">Kas Family Pejuang Perintis — ${rows.length} transaksi</div>
+  <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+// ===== SETTINGS =====
+function gantiPassword() {
+  const lama = document.getElementById('pwLama').value;
+  const baru = document.getElementById('pwBaru').value;
+  const konfirm = document.getElementById('pwKonfirm').value;
+  const savedPw = localStorage.getItem('kas_pw') || DEFAULT_PW;
+  if (lama !== savedPw) { showToast('Password lama salah', 'error'); return; }
+  if (!baru) { showToast('Password baru tidak boleh kosong', 'error'); return; }
+  if (baru !== konfirm) { showToast('Konfirmasi tidak cocok', 'error'); return; }
+  localStorage.setItem('kas_pw', baru);
+  ['pwLama','pwBaru','pwKonfirm'].forEach(id => document.getElementById(id).value = '');
+  showToast('Password berhasil diubah ✅', 'success');
+}
+
+async function clearAllData() {
+  if (!confirm('YAKIN hapus SEMUA data? Tidak bisa dibatalkan!')) return;
+  if (!confirm('Konfirmasi sekali lagi — semua transaksi akan hilang permanen!')) return;
+  DB = [];
+  showLoading('Menghapus data...');
+  await saveToCloud();
+  hideLoading();
+  updateSummary();
+  renderJurnal();
+  showToast('Semua data berhasil dihapus', 'success');
+}
+</script>
+</body>
+</html>
