@@ -244,28 +244,28 @@
       <div class="note-badge">📌 Iuran normal: Rp 100.000 / anggota / bulan</div>
       <div class="member-grid">
         <div class="member-card">
-          <div class="member-name"><div class="member-avatar">👩</div>Te Elah</div>
+          <div class="member-name"><div class="member-avatar">👨</div>A Dede - Teh Ella</div>
           <div class="member-inputs">
             <input type="number" id="elah_nominal" placeholder="Nominal (Rp)" min="0">
             <input type="date" id="elah_tgl">
           </div>
         </div>
         <div class="member-card">
-          <div class="member-name"><div class="member-avatar">👩</div>Te Nty</div>
+          <div class="member-name"><div class="member-avatar">👨</div>A Jamal - Teh Ntty</div>
           <div class="member-inputs">
             <input type="number" id="nty_nominal" placeholder="Nominal (Rp)" min="0">
             <input type="date" id="nty_tgl">
           </div>
         </div>
         <div class="member-card">
-          <div class="member-name"><div class="member-avatar">👩</div>Te Iyang</div>
+          <div class="member-name"><div class="member-avatar">👨</div>A Idris - Teh Iyang</div>
           <div class="member-inputs">
             <input type="number" id="iyang_nominal" placeholder="Nominal (Rp)" min="0">
             <input type="date" id="iyang_tgl">
           </div>
         </div>
         <div class="member-card">
-          <div class="member-name"><div class="member-avatar">👨</div>Om Iki</div>
+          <div class="member-name"><div class="member-avatar">👨</div>Om Iki - Sifa</div>
           <div class="member-inputs">
             <input type="number" id="iki_nominal" placeholder="Nominal (Rp)" min="0">
             <input type="date" id="iki_tgl">
@@ -451,11 +451,12 @@
 // ===== CONFIG =====
 const MASTER_KEY = '$2a$10$F1geYFRiHKyaRtb9VSUlQ.sx/qqZS3dzyf.pxS8KZRQRINSe2SlxK';
 const BIN_NAME = 'KasPejuangPerintis';
-const DEFAULT_PW = 'pejuang2024';
+const DEFAULT_PW = 'pejuang2026';
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
 
 let DB = [];
 let BIN_ID = null;
+let CLOUD_PW = null; // password dari cloud
 
 // ===== INIT =====
 async function init() {
@@ -463,6 +464,32 @@ async function init() {
   populateTahunSelect();
   BIN_ID = localStorage.getItem('kas_bin_id') || null;
   await loadFromCloud();
+}
+
+// Pre-login: load password from cloud before showing login
+async function preloadPassword() {
+  try {
+    // Try to find bin ID from local first
+    let binId = localStorage.getItem('kas_bin_id') || null;
+    if (!binId) {
+      // Create bin if not exists
+      const res = await fetch(`${JSONBIN_BASE}/b`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Bin-Name': BIN_NAME, 'X-Bin-Private': 'true' },
+        body: JSON.stringify({ transactions: [], password: DEFAULT_PW })
+      });
+      const json = await res.json();
+      binId = json.metadata?.id;
+      if (binId) localStorage.setItem('kas_bin_id', binId);
+    }
+    if (binId) {
+      const res = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
+      const json = await res.json();
+      CLOUD_PW = json.record?.password || DEFAULT_PW;
+    }
+  } catch(e) {
+    CLOUD_PW = DEFAULT_PW;
+  }
 }
 
 function setTodayDates() {
@@ -476,8 +503,8 @@ function setTodayDates() {
 // ===== AUTH =====
 function doLogin() {
   const pw = document.getElementById('pwInput').value;
-  const savedPw = localStorage.getItem('kas_pw') || DEFAULT_PW;
-  if (pw === savedPw) {
+  const activePw = CLOUD_PW || DEFAULT_PW;
+  if (pw === activePw) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appShell').style.display = 'block';
     init();
@@ -543,30 +570,23 @@ async function loadFromCloud() {
   showLoading('Memuat data dari cloud...');
   setSyncStatus('syncCloud', 'syncing', 'Menghubungi cloud...');
   try {
-    // List bins to find existing one
     if (!BIN_ID) {
-      const listRes = await fetch(`${JSONBIN_BASE}/b`, {
-        headers: { 'X-Master-Key': MASTER_KEY }
-      });
-      // If list not supported, try create
       const id = await findOrCreateBin();
       if (!id) throw new Error('Cannot create bin');
     }
-
-    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': MASTER_KEY }
-    });
+    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
     const json = await res.json();
     DB = json.record?.transactions || [];
+    CLOUD_PW = json.record?.password || DEFAULT_PW;
     localStorage.setItem('kas_db', JSON.stringify(DB));
     updateSummary();
     renderJurnal();
     setSyncStatus('syncCloud', 'synced', `✅ ${DB.length} transaksi dimuat dari cloud`);
     hideLoading();
   } catch(e) {
-    // Fallback to local
     const raw = localStorage.getItem('kas_db');
     DB = raw ? JSON.parse(raw) : [];
+    CLOUD_PW = DEFAULT_PW;
     updateSummary();
     renderJurnal();
     setSyncStatus('syncCloud', 'error', '⚠️ Gagal ke cloud, pakai data lokal');
@@ -574,21 +594,18 @@ async function loadFromCloud() {
   }
 }
 
-async function saveToCloud() {
+async function saveToCloud(includePw = false) {
   if (!BIN_ID) {
     const id = await findOrCreateBin();
     if (!id) return false;
   }
   try {
-    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
+    const payload = { transactions: DB, password: includePw ? CLOUD_PW : (CLOUD_PW || DEFAULT_PW) };
+    await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': MASTER_KEY
-      },
-      body: JSON.stringify({ transactions: DB })
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+      body: JSON.stringify(payload)
     });
-    const json = await res.json();
     localStorage.setItem('kas_db', JSON.stringify(DB));
     return true;
   } catch(e) {
@@ -619,10 +636,10 @@ function showToast(msg, type='success') {
 // ===== IURAN =====
 async function simpanIuran() {
   const members = [
-    { key: 'elah', name: 'Te Elah' },
-    { key: 'nty',  name: 'Te Nty' },
-    { key: 'iyang',name: 'Te Iyang' },
-    { key: 'iki',  name: 'Om Iki' }
+    { key: 'elah', name: 'A Dede - Teh Ella' },
+    { key: 'nty',  name: 'A Jamal - Teh Ntty' },
+    { key: 'iyang',name: 'A Idris - Teh Iyang' },
+    { key: 'iki',  name: 'Om Iki - Sifa' }
   ];
   let added = 0;
   setSyncStatus('syncIuran', 'syncing', 'Menyimpan...');
@@ -750,7 +767,10 @@ function populateTahunSelect() {
 }
 
 function exportPDF() {
-  let rows = [...DB];
+  // Snapshot DB dulu sebelum apapun - pastikan tidak ada perubahan
+  const snapshot = JSON.parse(JSON.stringify(DB));
+  let rows = [...snapshot];
+  
   if (currentExportMode === 'range') {
     const dari = document.getElementById('exp_dari').value;
     const sampai = document.getElementById('exp_sampai').value;
@@ -764,8 +784,10 @@ function exportPDF() {
     const thn = document.getElementById('exp_tahun').value;
     rows = rows.filter(r => r.tgl && r.tgl.startsWith(thn));
   }
+  
   if (!rows.length) { showToast('Tidak ada data untuk diekspor', 'error'); return; }
   rows.sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+  
   let saldo = 0;
   const totalIn = rows.reduce((s,r) => s+(r.debit||0), 0);
   const totalOut = rows.reduce((s,r) => s+(r.kredit||0), 0);
@@ -780,23 +802,22 @@ function exportPDF() {
     </tr>`;
   }).join('');
 
-  const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>Laporan Kas Pejuang Perintis</title>
   <style>
     body{font-family:Arial,sans-serif;padding:40px;color:#0f172a;}
     .header{text-align:center;margin-bottom:32px;border-bottom:3px solid #059669;padding-bottom:20px;}
     .header h1{font-size:22px;color:#059669;margin-bottom:4px;}
     .header p{color:#64748b;font-size:13px;}
-    .summary{display:flex;gap:20px;margin-bottom:24px;}
-    .sum-box{flex:1;padding:14px;border:1px solid #e2e8f0;border-radius:8px;text-align:center;}
+    .summary{display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap;}
+    .sum-box{flex:1;min-width:120px;padding:14px;border:1px solid #e2e8f0;border-radius:8px;text-align:center;}
     .sum-box .label{font-size:11px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;}
     .sum-box .val{font-size:18px;font-weight:700;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
     th{background:#0f172a;color:white;padding:10px 12px;text-align:left;}
     td{padding:10px 12px;border-bottom:1px solid #f1f5f9;}
     .footer{margin-top:24px;font-size:12px;color:#94a3b8;text-align:center;}
-    @media print{body{padding:20px;}}
+    @media print{body{padding:20px;}.no-print{display:none;}}
   </style></head><body>
   <div class="header">
     <h1>💰 Kas Family Pejuang Perintis</h1>
@@ -812,9 +833,22 @@ function exportPDF() {
     <tbody>${rowsHtml}</tbody>
   </table>
   <div class="footer">Kas Family Pejuang Perintis — ${rows.length} transaksi</div>
-  <script>window.onload=function(){window.print();}<\/script>
-  </body></html>`);
-  win.document.close();
+  <div class="no-print" style="text-align:center;margin-top:24px;">
+    <button onclick="window.print()" style="padding:12px 32px;background:#059669;color:white;border:none;border-radius:8px;font-size:15px;cursor:pointer;">🖨️ Print / Simpan PDF</button>
+  </div>
+  </body></html>`;
+
+  // Simpan ke blob URL biar tidak reload halaman utama
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win) {
+    showToast('Popup diblokir browser. Izinkan popup dulu.', 'error');
+    URL.revokeObjectURL(url);
+    return;
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  showToast('Laporan PDF siap dicetak!', 'success');
 }
 
 // ===== EDIT & DELETE JURNAL =====
@@ -878,17 +912,20 @@ async function deleteTransaksi(id) {
 }
 
 // ===== SETTINGS =====
-function gantiPassword() {
+async function gantiPassword() {
   const lama = document.getElementById('pwLama').value;
   const baru = document.getElementById('pwBaru').value;
   const konfirm = document.getElementById('pwKonfirm').value;
-  const savedPw = localStorage.getItem('kas_pw') || DEFAULT_PW;
-  if (lama !== savedPw) { showToast('Password lama salah', 'error'); return; }
+  const activePw = CLOUD_PW || DEFAULT_PW;
+  if (lama !== activePw) { showToast('Password lama salah', 'error'); return; }
   if (!baru) { showToast('Password baru tidak boleh kosong', 'error'); return; }
   if (baru !== konfirm) { showToast('Konfirmasi tidak cocok', 'error'); return; }
-  localStorage.setItem('kas_pw', baru);
+  CLOUD_PW = baru;
+  showLoading('Menyimpan password ke cloud...');
+  await saveToCloud(true);
+  hideLoading();
   ['pwLama','pwBaru','pwKonfirm'].forEach(id => document.getElementById(id).value = '');
-  showToast('Password berhasil diubah ✅', 'success');
+  showToast('Password berhasil diubah untuk semua anggota ✅', 'success');
 }
 
 async function clearAllData() {
@@ -902,6 +939,11 @@ async function clearAllData() {
   renderJurnal();
   showToast('Semua data berhasil dihapus', 'success');
 }
+
+// Load password dari cloud sebelum login
+window.addEventListener('load', async () => {
+  await preloadPassword();
+});
 </script>
 </body>
-              </html> 
+</html>
