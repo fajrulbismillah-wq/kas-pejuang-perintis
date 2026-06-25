@@ -453,40 +453,27 @@ const MASTER_KEY = '$2a$10$F1geYFRiHKyaRtb9VSUlQ.sx/qqZS3dzyf.pxS8KZRQRINSe2SlxK
 const BIN_NAME = 'KasPejuangPerintis';
 const DEFAULT_PW = 'pejuang2026';
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+const HARDCODED_BIN_ID = '6a3ca990f5f4af5e292ca2c8'; // BIN utama - jangan diubah!
 
 let DB = [];
-let BIN_ID = null;
-let CLOUD_PW = null; // password dari cloud
+let BIN_ID = HARDCODED_BIN_ID; // semua device pakai bin yang sama
+let CLOUD_PW = null;
 
 // ===== INIT =====
 async function init() {
   setTodayDates();
   populateTahunSelect();
-  BIN_ID = localStorage.getItem('kas_bin_id') || null;
+  BIN_ID = HARDCODED_BIN_ID;
   await loadFromCloud();
 }
 
 // Pre-login: load password from cloud before showing login
 async function preloadPassword() {
   try {
-    // Try to find bin ID from local first
-    let binId = localStorage.getItem('kas_bin_id') || null;
-    if (!binId) {
-      // Create bin if not exists
-      const res = await fetch(`${JSONBIN_BASE}/b`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY, 'X-Bin-Name': BIN_NAME, 'X-Bin-Private': 'true' },
-        body: JSON.stringify({ transactions: [], password: DEFAULT_PW })
-      });
-      const json = await res.json();
-      binId = json.metadata?.id;
-      if (binId) localStorage.setItem('kas_bin_id', binId);
-    }
-    if (binId) {
-      const res = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
-      const json = await res.json();
-      CLOUD_PW = json.record?.password || DEFAULT_PW;
-    }
+    BIN_ID = HARDCODED_BIN_ID;
+    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
+    const json = await res.json();
+    CLOUD_PW = json.record?.password || DEFAULT_PW;
   } catch(e) {
     CLOUD_PW = DEFAULT_PW;
   }
@@ -541,11 +528,26 @@ function hideLoading() {
 
 // ===== JSONBIN API =====
 async function findOrCreateBin() {
-  // Try to find existing bin
   if (BIN_ID) return BIN_ID;
 
-  // Create new bin
   try {
+    // Cari bin yang sudah ada berdasarkan nama
+    const searchRes = await fetch(`${JSONBIN_BASE}/b?meta=true`, {
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
+    const searchJson = await searchRes.json();
+    
+    // Cari bin dengan nama KasPejuangPerintis
+    if (Array.isArray(searchJson)) {
+      const existing = searchJson.find(b => b.snippetMeta?.name === BIN_NAME);
+      if (existing) {
+        BIN_ID = existing.id || existing._id;
+        localStorage.setItem('kas_bin_id', BIN_ID);
+        return BIN_ID;
+      }
+    }
+
+    // Kalau belum ada, buat baru
     const res = await fetch(`${JSONBIN_BASE}/b`, {
       method: 'POST',
       headers: {
@@ -554,14 +556,14 @@ async function findOrCreateBin() {
         'X-Bin-Name': BIN_NAME,
         'X-Bin-Private': 'true'
       },
-      body: JSON.stringify({ transactions: [] })
+      body: JSON.stringify({ transactions: [], password: DEFAULT_PW })
     });
     const json = await res.json();
-    BIN_ID = json.metadata.id;
-    localStorage.setItem('kas_bin_id', BIN_ID);
+    BIN_ID = json.metadata?.id;
+    if (BIN_ID) localStorage.setItem('kas_bin_id', BIN_ID);
     return BIN_ID;
   } catch(e) {
-    console.error('Create bin error:', e);
+    console.error('findOrCreateBin error:', e);
     return null;
   }
 }
@@ -570,11 +572,7 @@ async function loadFromCloud() {
   showLoading('Memuat data dari cloud...');
   setSyncStatus('syncCloud', 'syncing', 'Menghubungi cloud...');
   try {
-    if (!BIN_ID) {
-      const id = await findOrCreateBin();
-      if (!id) throw new Error('Cannot create bin');
-    }
-    const res = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
+    const res = await fetch(`${JSONBIN_BASE}/b/${HARDCODED_BIN_ID}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
     const json = await res.json();
     DB = json.record?.transactions || [];
     CLOUD_PW = json.record?.password || DEFAULT_PW;
@@ -595,13 +593,9 @@ async function loadFromCloud() {
 }
 
 async function saveToCloud(includePw = false) {
-  if (!BIN_ID) {
-    const id = await findOrCreateBin();
-    if (!id) return false;
-  }
   try {
-    const payload = { transactions: DB, password: includePw ? CLOUD_PW : (CLOUD_PW || DEFAULT_PW) };
-    await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
+    const payload = { transactions: DB, password: CLOUD_PW || DEFAULT_PW };
+    await fetch(`${JSONBIN_BASE}/b/${HARDCODED_BIN_ID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
       body: JSON.stringify(payload)
